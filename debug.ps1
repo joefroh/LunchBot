@@ -1,0 +1,1 @@
+& $env:LocalAppData\botframework\update.exe --processStart "botframework-emulator.exe"
