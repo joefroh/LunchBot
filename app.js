@@ -105,7 +105,7 @@ bot.dialog('/sendmoney', [
         if (results.response) {
             //Actually send request here
             session.send("Cool, I'll send the request for you right now!");
-            session.send("www.paypal.me/"+session.userData.name+"/"+paymentData.howMuch.toFixed(2));
+            session.send("[Click me to pay](www.paypal.me/"+session.userData.name+"/"+paymentData.howMuch.toFixed(2)+")");
             session.endDialog();
         } else {
             session.send("Sorry about that! Let's try again.");
