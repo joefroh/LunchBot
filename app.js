@@ -2,6 +2,7 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
+var stringformat = require('stringformat');
 
 //=========================================================
 // Bot Setup
@@ -54,7 +55,7 @@ bot.dialog('/profile', [
     function (session, results) {
         session.userData.name = results.response;
 
-        builder.Prompts.confirm(session, "Is " + session.userData.name + " correct?");
+        builder.Prompts.confirm(session, stringformat("Is {0} correct?", session.userData.name));
     },
     function (session, results) {
         if (results.response) {
@@ -70,7 +71,7 @@ bot.dialog('/profile', [
 bot.dialog('/main', [
     function (session, args) {
         if (!args) {
-            builder.Prompts.text(session, 'Hey ' + session.userData.name + '! What can I do for you?');
+            builder.Prompts.text(session, stringformat('Hey {0}! What can I do for you?', session.userData.name));
             //session.send('Hey %s! What can I do for you?', session.userData.name);
         } else {
             session.send("Sorry, I didn't understand what you asked me. My programmer is bad at this NLP stuff...");
@@ -100,7 +101,7 @@ bot.dialog('/sendmoney', [
     },
     function (session, results) {
         session.dialogData.howMuch = results.response;
-        builder.Prompts.confirm(session, "You want to request $" + session.dialogData.howMuch.toFixed(2) + " from " + session.dialogData.who + "?");
+        builder.Prompts.confirm(session, stringformat("You want to request ${0} from {1}?", session.dialogData.howMuch.toFixed(2), session.dialogData.who));
     },
     function (session, results) {
         if (results.response) {
