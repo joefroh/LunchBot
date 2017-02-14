@@ -3,7 +3,6 @@ var builder = require('botbuilder');
 var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
 
-var paymentData = {}; //todo: dialogData
 //=========================================================
 // Bot Setup
 //=========================================================
@@ -93,16 +92,15 @@ bot.dialog('/main', [
 
 bot.dialog('/sendmoney', [
     function (session, args, next) {
-        paymentData = {};
         builder.Prompts.text(session, "Who do you want to request money from?");
     },
     function (session, results) {
-        paymentData.who = results.response;
+        session.dialogData.who = results.response;
         builder.Prompts.number(session, "How much do you want to charge them?");
     },
     function (session, results) {
-        paymentData.howMuch = results.response;
-        builder.Prompts.confirm(session, "You want to request $" + paymentData.howMuch.toFixed(2) + " from " + paymentData.who + "?");
+        session.dialogData.howMuch = results.response;
+        builder.Prompts.confirm(session, "You want to request $" + session.dialogData.howMuch.toFixed(2) + " from " + session.dialogData.who + "?");
     },
     function (session, results) {
         if (results.response) {
@@ -110,8 +108,8 @@ bot.dialog('/sendmoney', [
             session.send("Cool, I'll send the request for you right now!");
 
             var message = new builder.Message(session);
-            var link = response.linkButtonResponse(session, paypal.createRequestLink(session.userData.name, paymentData.howMuch), "Pay Me");
-            
+            var link = response.linkButtonResponse(session, paypal.createRequestLink(session.userData.name, session.dialogData.howMuch), "Pay Me");
+
             message.addAttachment(link);
             session.send(message);
             session.endDialog();
