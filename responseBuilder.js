@@ -1,7 +1,6 @@
 var builder = require('botbuilder');
 
 module.exports = {
-
     linkButtonResponse: function (session, url, text) {
         var card = new builder.ThumbnailCard(session)
             .title('')
@@ -13,6 +12,4 @@ module.exports = {
             ]);
         return card;
     }
-
-
 };

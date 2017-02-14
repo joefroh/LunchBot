@@ -72,7 +72,6 @@ bot.dialog('/main', [
     function (session, args) {
         if (!args) {
             builder.Prompts.text(session, stringformat('Hey {0}! What can I do for you?', session.userData.name));
-            //session.send('Hey %s! What can I do for you?', session.userData.name);
         } else {
             session.send("Sorry, I didn't understand what you asked me. My programmer is bad at this NLP stuff...");
             builder.Prompts.text(session, "Try something like \"request money\"");
