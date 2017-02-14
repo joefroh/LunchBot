@@ -1,5 +1,8 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var response = require('./responseBuilder');
+var paypal = require('./paypalMeURLBuilder');
+
 var paymentData = {}; //todo: dialogData
 //=========================================================
 // Bot Setup
@@ -105,7 +108,12 @@ bot.dialog('/sendmoney', [
         if (results.response) {
             //Actually send request here
             session.send("Cool, I'll send the request for you right now!");
-            session.send("[Click me to pay](www.paypal.me/"+session.userData.name+"/"+paymentData.howMuch.toFixed(2)+")");
+
+            var message = new builder.Message(session);
+            var link = response.linkButtonResponse(session, paypal.createRequestLink(session.userData.name, paymentData.howMuch), "Pay Me");
+            
+            message.addAttachment(link);
+            session.send(message);
             session.endDialog();
         } else {
             session.send("Sorry about that! Let's try again.");
