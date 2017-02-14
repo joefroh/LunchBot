@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "botbuilder": "^3.6.0",
+    "cognitive-services": "^0.1.0",
     "restify": "^4.3.0",
     "stringformat": "0.0.5"
   },
