@@ -3,6 +3,11 @@ var builder = require('botbuilder');
 var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
 var stringformat = require('stringformat');
+const cognitiveServices = require('cognitive-services');
+
+//prompts
+var genericMain = require('./prompts');
+
 
 //=========================================================
 // Bot Setup
@@ -23,12 +28,20 @@ var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
 //=========================================================
+// Custom Prompts
+//=========================================================
+
+genericMain.create(bot);
+
+//=========================================================
 // Bots Dialogs
 //=========================================================
 
 bot.dialog('/', [
     function (session, args, next) {
         if (session.message.text == '/delete') {
+            console.log("=====RESET USER DATA=====");
+
             session.userData.name = null;
         }
         if (!session.userData.name) {
@@ -69,24 +82,34 @@ bot.dialog('/profile', [
 ]);
 
 bot.dialog('/main', [
-    function (session, args) {
-        if (!args) {
-            builder.Prompts.text(session, stringformat('Hey {0}! What can I do for you?', session.userData.name));
-        } else {
-            session.send("Sorry, I didn't understand what you asked me. My programmer is bad at this NLP stuff...");
-            builder.Prompts.text(session, "Try something like \"request money\"");
-        }
+    function (session, args, next) {
+        genericMain.beginDialog(session, args);
     },
-    function (session, results) {
-        if (results.response == "request money") {
-            session.beginDialog('/sendmoney');
-        }
-        else {
-            session.beginDialog('/main', "failed to understand");
+    function (session, results, next) {
+        if (results.type == "text") {
+            if (results.response == "request money") {
+                session.beginDialog('/sendmoney');
+            }
+            else {
+                session.replaceDialog('/main', "failed to understand"); //We failed, retry
+            }
+        } else if (results.type == "media") {
+            session.send(results.response.contentUrl);
+            next();
         }
     },
     function (session) {
         session.endDialog();
+    }
+]);
+
+bot.dialog('/generalPrompt', [
+    function (session, args, next) {
+        if (session.message.attachments.length > 0) {
+            session.endDialogWithResult({ response: session.message.attachments[0], type: "media" });
+        } else {
+            session.endDialogWithResult({ response: session.message.text, type: "text" });
+        }
     }
 ]);
 
@@ -115,7 +138,7 @@ bot.dialog('/sendmoney', [
             session.endDialog();
         } else {
             session.send("Sorry about that! Let's try again.");
-            session.beginDialog('/sendmoney', "failed");
+            session.replaceDialog('/sendmoney', "failed");
         }
     }
 ]);
