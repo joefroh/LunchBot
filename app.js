@@ -9,7 +9,7 @@ var Client = require('node-rest-client').Client;
 var genericMain = require('./prompts');
 
 const VISION_URL = 'https://westus.api.cognitive.microsoft.com/vision/v1.0/ocr?language=unk&detectOrientation=true'
-const cogsKey = '';
+const cogsKey = process.env.COGS_API_KEY;
 
 //=========================================================
 // Bot Setup
@@ -170,8 +170,7 @@ bot.dialog('/ocr', [
                     }, this);
                 }, this);
             }
-            console.log(numbers);
-            session.send("done analysis");
+            session.send(numbers.toString());
         });
     }
 ]);
