@@ -4,11 +4,13 @@ var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
 var stringformat = require('stringformat');
 const cognitiveServices = require('cognitive-services');
+var Client = require('node-rest-client').Client;
 
 //prompts
 var genericMain = require('./prompts');
 
-const cogsKey = ''; 
+const VISION_URL = 'https://westus.api.cognitive.microsoft.com/vision/v1.0/ocr?language=unk&detectOrientation=true'
+const cogsKey = '';
 var vis = cognitiveServices.computerVision({ API_KEY: cogsKey });
 
 const parameters = {
@@ -150,14 +152,24 @@ bot.dialog('/ocr', [
         builder.Prompts.text(session, "url?");
     },
     function (session, results) {
-       var results = vis.ocr({
-            parameters: parameters,
-            body: { "url": results.response }
-        }).then(function(response){
-            console.log("success",response);
-        }, function(){}).catch((err) => {
-            console.error(err);
+        var client = new Client();
+        var args = {
+            data: { "url": results.response },
+            headers: {
+                "Content-Type": "application/json",
+                "Ocp-Apim-Subscription-Key": cogsKey
+            }
+        }
+        client.post(VISION_URL, args, function (data, response) {
+            if (data.regions.length > 0) {
+                data.regions.forEach(function(element) {
+                    element.lines.forEach(function(element) {
+                        element.words.forEach(function(element) {
+                            console.log(element.text);
+                        }, this);
+                    }, this);
+                }, this);
+            }
         });
-        results.then(result => console.log(result));
     }
 ]);
