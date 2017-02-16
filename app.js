@@ -8,6 +8,13 @@ const cognitiveServices = require('cognitive-services');
 //prompts
 var genericMain = require('./prompts');
 
+const cogsKey = ''; 
+var vis = cognitiveServices.computerVision({ API_KEY: cogsKey });
+
+const parameters = {
+    language: "unk",
+    detectOrientation: "true"
+};
 
 //=========================================================
 // Bot Setup
@@ -44,6 +51,10 @@ bot.dialog('/', [
 
             session.userData.name = null;
         }
+        else if (session.message.text == '/ocr') {
+            session.beginDialog('/ocr');
+        }
+
         if (!session.userData.name) {
             session.beginDialog('/profile');
         }
@@ -95,21 +106,12 @@ bot.dialog('/main', [
             }
         } else if (results.type == "media") {
             session.send(results.response.contentUrl);
+
             next();
         }
     },
     function (session) {
         session.endDialog();
-    }
-]);
-
-bot.dialog('/generalPrompt', [
-    function (session, args, next) {
-        if (session.message.attachments.length > 0) {
-            session.endDialogWithResult({ response: session.message.attachments[0], type: "media" });
-        } else {
-            session.endDialogWithResult({ response: session.message.text, type: "text" });
-        }
     }
 ]);
 
@@ -140,5 +142,22 @@ bot.dialog('/sendmoney', [
             session.send("Sorry about that! Let's try again.");
             session.replaceDialog('/sendmoney', "failed");
         }
+    }
+]);
+
+bot.dialog('/ocr', [
+    function (session) {
+        builder.Prompts.text(session, "url?");
+    },
+    function (session, results) {
+       var results = vis.ocr({
+            parameters: parameters,
+            body: { "url": results.response }
+        }).then(function(response){
+            console.log("success",response);
+        }, function(){}).catch((err) => {
+            console.error(err);
+        });
+        results.then(result => console.log(result));
     }
 ]);
