@@ -157,7 +157,7 @@ bot.dialog('/ocr', [
         session.sendTyping();
         client.post(VISION_URL, args, function (data, response) {
             var numbers = []; 
-            if (data.regions.length > 0) {
+            if (data.regions && data.regions.length > 0) {
                 data.regions.forEach(function (element) {
                     element.lines.forEach(function (element) {
                         element.words.forEach(function (element) {
