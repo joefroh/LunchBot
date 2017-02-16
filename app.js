@@ -3,7 +3,6 @@ var builder = require('botbuilder');
 var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
 var stringformat = require('stringformat');
-const cognitiveServices = require('cognitive-services');
 var Client = require('node-rest-client').Client;
 
 //prompts
@@ -11,12 +10,6 @@ var genericMain = require('./prompts');
 
 const VISION_URL = 'https://westus.api.cognitive.microsoft.com/vision/v1.0/ocr?language=unk&detectOrientation=true'
 const cogsKey = '';
-var vis = cognitiveServices.computerVision({ API_KEY: cogsKey });
-
-const parameters = {
-    language: "unk",
-    detectOrientation: "true"
-};
 
 //=========================================================
 // Bot Setup
@@ -33,6 +26,7 @@ var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
     appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
+
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
@@ -160,16 +154,24 @@ bot.dialog('/ocr', [
                 "Ocp-Apim-Subscription-Key": cogsKey
             }
         }
+        session.sendTyping();
         client.post(VISION_URL, args, function (data, response) {
+            var numbers = []; 
             if (data.regions.length > 0) {
-                data.regions.forEach(function(element) {
-                    element.lines.forEach(function(element) {
-                        element.words.forEach(function(element) {
-                            console.log(element.text);
+                data.regions.forEach(function (element) {
+                    element.lines.forEach(function (element) {
+                        element.words.forEach(function (element) {
+                            var num = Number.parseFloat(element.text);
+                            if (!Number.isNaN(num)) { // filter for only numbers, we are going to try to solve the REALLY hard ML problem of identifying prices by just asking the user.
+                                numbers.push(num);
+                            }
+                            //session.send(element.text);
                         }, this);
                     }, this);
                 }, this);
             }
+            console.log(numbers);
+            session.send("done analysis");
         });
     }
 ]);
