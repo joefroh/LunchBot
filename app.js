@@ -4,12 +4,10 @@ var response = require('./responseBuilder');
 var paypal = require('./paypalMeURLBuilder');
 var stringformat = require('stringformat');
 var Client = require('node-rest-client').Client;
+var CogServices = require('./cogServices');
 
 //prompts
-var genericMain = require('./prompts');
-
-const VISION_URL = 'https://westus.api.cognitive.microsoft.com/vision/v1.0/ocr?language=unk&detectOrientation=true'
-const cogsKey = process.env.COGS_API_KEY;
+var genericMain = require('./prompts').genericMain;
 
 //=========================================================
 // Bot Setup
@@ -42,15 +40,6 @@ genericMain.create(bot);
 
 bot.dialog('/', [
     function (session, args, next) {
-        if (session.message.text == '/delete') {
-            console.log("=====RESET USER DATA=====");
-
-            session.userData.name = null;
-        }
-        else if (session.message.text == '/ocr') {
-            session.beginDialog('/ocr');
-        }
-
         if (!session.userData.name) {
             session.beginDialog('/profile');
         }
@@ -79,7 +68,7 @@ bot.dialog('/profile', [
     },
     function (session, results) {
         if (results.response) {
-            session.endDialog();
+            session.replaceDialog('/');
         }
         else {
             session.send("Good thing we caught that! Let's try again")
@@ -90,7 +79,22 @@ bot.dialog('/profile', [
 
 bot.dialog('/main', [
     function (session, args, next) {
-        genericMain.beginDialog(session, args);
+        if (session.message.text == '/delete') {
+            console.log("=====RESET USER DATA=====");
+            session.userData = {};
+            session.send("Reset user data");
+            session.endConversation();
+        }
+        else if (session.userData.waiting) {
+            session.send("Hang on, I am still working with your image.");
+            session.endConversation();
+        }
+        else if (session.message.text == '/ocr') {
+            session.beginDialog('/ocr');
+        }
+        else {
+            genericMain.beginDialog(session, args);
+        }
     },
     function (session, results, next) {
         if (results.type == "text") {
@@ -146,33 +150,9 @@ bot.dialog('/ocr', [
         builder.Prompts.text(session, "url?");
     },
     function (session, results) {
-        var client = new Client();
-        var args = {
-            data: { "url": results.response },
-            headers: {
-                "Content-Type": "application/json",
-                "Ocp-Apim-Subscription-Key": cogsKey
-            }
-        }
         session.sendTyping();
-        client.post(VISION_URL, args, function (data, response) {
-            var numbers = []; 
-            if (data.regions && data.regions.length > 0) {
-                data.regions.forEach(function (element) {
-                    element.lines.forEach(function (element) {
-                        element.words.forEach(function (element) {
-                            var num = Number.parseFloat(element.text);
-                            if (!Number.isNaN(num)) { // filter for only numbers, we are going to try to solve the REALLY hard ML problem of identifying prices by just asking the user.
-                                numbers.push(num);
-                            }
-                            //session.send(element.text);
-                        }, this);
-                    }, this);
-                }, this);
-            } else{
-                console.log("no numbers found in image");
-            }
-            session.send(numbers.toString());
-        });
+        session.userData.waiting = true;
+        CogServices.GetNumbers(results.response, session);
+        session.endDialog("Let me try to figure out the image.");
     }
 ]);

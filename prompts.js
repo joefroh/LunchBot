@@ -1,11 +1,15 @@
 var builder = require('botbuilder');
 var stringformat = require('stringformat');
 
-exports.beginDialog = function (session, options) {
+//Create Promp Objects
+exports.genericMain = {};
+
+
+exports.genericMain.beginDialog = function (session, options) {
     session.beginDialog('genericMain', options || {});
 }
 
-exports.create = function (bot) {
+exports.genericMain.create = function (bot) {
     var prompt = new builder.IntentDialog()
         .onBegin(function (session, args) {
             if (args != "failed to understand") {
