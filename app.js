@@ -107,6 +107,7 @@ bot.dialog('/main', [
         } else if (results.type == "media") {
             session.sendTyping();
             session.userData.waiting = true;
+            session.send(results.respont.contentUrl);
             CogServices.GetNumbers(results.response.contentUrl, session);
             session.endDialog("Let me try to figure out the image.");
         }
