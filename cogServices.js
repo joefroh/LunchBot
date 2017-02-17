@@ -30,9 +30,11 @@ module.exports.GetNumbers = function (url, session) {
             "Ocp-Apim-Subscription-Key": cogsKey
         }
     }
-
+    session.send("pre post request");
     client.post(VISION_URL, args, function (data, response) {
         var numbers = [];
+        session.send("got response");
+        try{
         if (data.regions && data.regions.length > 0) {
             data.regions.forEach(function (element) {
                 element.lines.forEach(function (element) {
@@ -46,6 +48,9 @@ module.exports.GetNumbers = function (url, session) {
             }, this);
         }
         messageUser(session, numbers);
+        }catch(error){
+            session.send(error.toString());
+        }
     });
 }
 
