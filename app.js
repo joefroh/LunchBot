@@ -169,6 +169,8 @@ bot.dialog('/ocr', [
                         }, this);
                     }, this);
                 }, this);
+            } else{
+                console.log("no numbers found in image");
             }
             session.send(numbers.toString());
         });
