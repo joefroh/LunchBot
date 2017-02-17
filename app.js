@@ -105,13 +105,11 @@ bot.dialog('/main', [
                 session.replaceDialog('/main', "failed to understand"); //We failed, retry
             }
         } else if (results.type == "media") {
-            session.send(results.response.contentUrl);
-
-            next();
+            session.sendTyping();
+            session.userData.waiting = true;
+            CogServices.GetNumbers(results.response.contentUrl, session);
+            session.endDialog("Let me try to figure out the image.");
         }
-    },
-    function (session) {
-        session.endDialog();
     }
 ]);
 
